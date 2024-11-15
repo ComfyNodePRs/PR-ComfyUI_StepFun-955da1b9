@@ -1,9 +1,9 @@
 [project]
 name = "comfyui-scstepfun"
 description = "To use stepfun's library, you need an official api that supports multimodal inputs such as video and pictures https://platform.stepfun.com/request-restriction"
-version = "1.0.0"
+version = "1.0.1"
 license = {file = "LICENSE"}
-dependencies = ["diffusers"]
+dependencies = ["openai"]
 
 [project.urls]
 Repository = "https://github.com/chenbaiyujason/ComfyUI-StepFun"
