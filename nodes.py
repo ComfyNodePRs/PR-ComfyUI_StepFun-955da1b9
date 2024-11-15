@@ -150,7 +150,7 @@ class TextImageChat:
         return {
             "required": {
                 "client": ("STEPFUN_CLIENT",),
-                "model": (["step-1v-8k", "step-1v-32k", "step-1.5v-mini"], {"default": "step-1.5v-mini"}),
+                "model": (["step-1v-8k", "step-1v-32k", "step-1.5v-mini","step-2-16k"], {"default": "step-1.5v-mini"}),
                 "detail": (["low", "high"], {"default": "low"}),
                 "system_prompt": ("STRING", {
                     "default": "Describe the picture",
@@ -222,7 +222,7 @@ class TextImageChat:
                 "text": user_prompt
             })
         
-        if image is not None:
+        if image is not None and not model.startswith("step-2"):
             img_str = self.process_image(image, detail)
             user_message["content"].append({
                 "type": "image_url",
