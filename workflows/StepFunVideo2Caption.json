@@ -1,0 +1,277 @@
+{
+  "last_node_id": 5,
+  "last_link_id": 5,
+  "nodes": [
+    {
+      "id": 4,
+      "type": "VideoChat",
+      "pos": [
+        -2003.46435546875,
+        444.6044006347656
+      ],
+      "size": [
+        400,
+        310
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "client",
+          "type": "STEPFUN_CLIENT",
+          "link": 3
+        },
+        {
+          "name": "video_url",
+          "type": "STRING",
+          "link": 4,
+          "widget": {
+            "name": "video_url"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "response",
+          "type": "STRING",
+          "links": [
+            5
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "total_tokens",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "finish_reason",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VideoChat"
+      },
+      "widgets_values": [
+        "step-1.5v-mini",
+        "Description What happened to the uploaded video",
+        "",
+        "",
+        false,
+        0.5,
+        0.9,
+        1024
+      ]
+    },
+    {
+      "id": 5,
+      "type": "ShowText|pysssss",
+      "pos": [
+        -1557.027587890625,
+        445.50140380859375
+      ],
+      "size": [
+        321.4136047363281,
+        270.87322998046875
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 5,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null,
+          "shape": 6
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ShowText|pysssss"
+      },
+      "widgets_values": [
+        "",
+        "The image depicts a cartoon illustration of a sleeping animal, possibly a cat or a similar feline-like creature. The animal is shown lying on its side with its eyes closed and appears to be snoring, indicated by the \"zzz\" sound effect above its head. The background is a simple representation of the sky with some clouds. The illustration has a playful and whimsical appearance."
+      ]
+    },
+    {
+      "id": 3,
+      "type": "StepFunClient",
+      "pos": [
+        -2624.2880859375,
+        108.11141967773438
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "client",
+          "type": "STEPFUN_CLIENT",
+          "links": [
+            2,
+            3
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "StepFunClient"
+      },
+      "widgets_values": [
+        ""
+      ]
+    },
+    {
+      "id": 2,
+      "type": "ShowText|pysssss",
+      "pos": [
+        -1730.67626953125,
+        256.4507141113281
+      ],
+      "size": [
+        315,
+        76
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 1,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null,
+          "shape": 6
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ShowText|pysssss"
+      },
+      "widgets_values": [
+        "",
+        "stepfile://file-CzxiDg8Ey0"
+      ]
+    },
+    {
+      "id": 1,
+      "type": "VideoFileUploader",
+      "pos": [
+        -2175.044921875,
+        271.3929443359375
+      ],
+      "size": [
+        340.20001220703125,
+        58
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "client",
+          "type": "STEPFUN_CLIENT",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file_link",
+          "type": "STRING",
+          "links": [
+            1,
+            4
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VideoFileUploader"
+      },
+      "widgets_values": [
+        "C:\\Users\\Administrator\\Downloads\\vidu--4-2024-11-21T20_47_47Z.mp4"
+      ]
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "STRING"
+    ],
+    [
+      2,
+      3,
+      0,
+      1,
+      0,
+      "STEPFUN_CLIENT"
+    ],
+    [
+      3,
+      3,
+      0,
+      4,
+      0,
+      "STEPFUN_CLIENT"
+    ],
+    [
+      4,
+      1,
+      0,
+      4,
+      1,
+      "STRING"
+    ],
+    [
+      5,
+      4,
+      0,
+      5,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.3513057093104115,
+      "offset": [
+        2805.166728388079,
+        34.840790315249286
+      ]
+    }
+  },
+  "version": 0.4
+}

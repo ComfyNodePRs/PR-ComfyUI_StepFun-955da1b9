@@ -27,25 +27,7 @@ def ensure_openai():
             print("Failed to install 'openai'. Please, install manually.")
 
 from openai import OpenAI
-def ensure_oss2():
-    if "python_embeded" in sys.executable or "python_embedded" in sys.executable:
-        pip_install = [sys.executable, "-s", "-m", "pip", "install"]
-    else:
-        pip_install = [sys.executable, "-m", "pip", "install"]
 
-    try:
-        import oss2
-        from oss2.models import Bucket
-    except Exception as e:
-        try:
-            subprocess.check_call(pip_install + ['oss2'])
-            import oss2
-            from oss2.models import Bucket
-        except:
-            print("Failed to install 'oss2'. Please, install manually.")
-
-import oss2
-# from oss2.models import Bucket
 import json
 
 
@@ -381,91 +363,6 @@ class JSONParser:
         except Exception as e:
             raise ValueError(f"JSON解析错误: {str(e)}")
 
-class OSSClient:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "access_key_id": ("STRING", {"default": ""}),
-                "access_key_secret": ("STRING", {"default": ""}),
-                "endpoint": ("STRING", {"default": "oss-cn-hangzhou.aliyuncs.com"}),
-                "bucket_name": ("STRING", {"default": ""}),
-                "region": ("STRING", {"default": "cn-hangzhou"})
-            }
-        }
-    
-    RETURN_TYPES = ("OSS_CLIENT",)
-    RETURN_NAMES = ("client",)
-    FUNCTION = "create_client"
-    CATEGORY = "StepFun"
-
-    def create_client(self, access_key_id, access_key_secret, endpoint, bucket_name, region):
-        if endpoint.startswith('http://') or endpoint.startswith('https://'):
-            endpoint = endpoint.split('://')[-1]
-            
-        if '.' in bucket_name:
-            bucket_name = bucket_name.split('.')[0]
-            
-        auth = oss2.Auth(access_key_id, access_key_secret)
-        bucket = oss2.Bucket(auth, endpoint, bucket_name, region=region)
-        return (bucket,)
-
-class OSSUploader:
-    @classmethod
-    def INPUT_TYPES(s):
-
-        return {"required":
-                    {"client": ("OSS_CLIENT",),
-                    "target_path": ("STRING", {"default": ""}),
-                    "file_path":("STRING", {"multiline": True}),
-                }
-                }
-    
-    RETURN_TYPES = ("STRING",)
-    RETURN_NAMES = ("oss_url",)
-    FUNCTION = "upload_file"
-    CATEGORY = "StepFun"
-
-    def upload_file(self, client, target_path, file_path):
-        try:
-            if not file_path:
-                raise ValueError("请选择要上传的文件路径")
-            
-            # 检查文件是否存在
-            if not os.path.exists(file_path):
-                raise ValueError(f"文件不存在: {file_path}")
-            
-            # 使用原文件名(不包含路径)
-            filename = os.path.basename(file_path)
-            
-            # 构建目标路径
-            if target_path:
-                # 移除开头的斜杠并规范化路径分隔符
-                target_path = target_path.strip('/')
-                target_path = target_path.replace('\\', '/')
-                if target_path:
-                    object_key = f"{target_path}/{filename}"
-                else:
-                    object_key = filename
-            else:
-                object_key = filename
-            
-            client.put_object_from_file(object_key, file_path)
-            
-            # 构建OSS URL
-            bucket_endpoint = client.endpoint.replace('http://', '').replace('https://', '')
-            oss_url = f"https://{client.bucket_name}.{bucket_endpoint}/{object_key}"
-            
-            return {
-                "ui": {
-                    "oss_url": oss_url
-                },
-                "result": (oss_url,)
-            }
-            
-        except Exception as e:
-            error_msg = f"上传失败: {str(e)}"
-            raise Exception(error_msg)
 
 class CombineStrings:
     @classmethod
@@ -492,15 +389,71 @@ class CombineStrings:
         
         return (all_strings, combined_string)
 
+class VideoFileUploader:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "client": ("STEPFUN_CLIENT",),
+                "file_path": ("STRING", {"default": ""}),
+            },
+            "hidden": {
+                "unique_id": "UNIQUE_ID"
+            }
+        }
+    
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("file_link",)
+    FUNCTION = "upload_video_file"
+    CATEGORY = "StepFun"
+
+    def upload_video_file(self, client, file_path, unique_id):
+        if not os.path.exists(file_path):
+            raise ValueError(f"文件不存在: {file_path}")
+        
+        PromptServer.instance.send_sync("stepfun.file.upload", {
+            "node": unique_id,
+            "message": f"开始上传视频文件: {os.path.basename(file_path)}"
+        })
+        
+        try:
+            response = client.files.create(
+                file=open(file_path, "rb"),
+                purpose="storage"
+            )
+            
+            file_link = f"stepfile://{response.id}"
+            
+            PromptServer.instance.send_sync("stepfun.file.upload", {
+                "node": unique_id,
+                "message": f"视频文件上传成功: {response.filename}",
+                "type": "success"
+            })
+            
+            return {
+                "ui": {
+                    "file_link": file_link
+                },
+                "result": (file_link,)
+            }
+            
+        except Exception as e:
+            error_msg = f"上传失败: {str(e)}"
+            PromptServer.instance.send_sync("stepfun.file.upload", {
+                "node": unique_id,
+                "message": error_msg,
+                "type": "error"
+            })
+            raise Exception(error_msg)
+
 # 更新节点映射
 NODE_CLASS_MAPPINGS = {
     "StepFunClient": StepFunClient,
     "TextImageChat": TextImageChat,
     "VideoChat": VideoChat,
     "JSONParser": JSONParser,
-    "OSSClient": OSSClient,
-    "OSSUploader": OSSUploader,
     "CombineStrings": CombineStrings,
+    "VideoFileUploader": VideoFileUploader,
 
 }
 
@@ -509,8 +462,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "TextImageChat": "StepFun Chat Completion", 
     "VideoChat": "StepFun Video Chat",
     "JSONParser": "StepFun JSON Parser",
-    "OSSClient": "StepFun OSS Client",
-    "OSSUploader": "StepFun OSS Uploader",
     "CombineStrings": "StepFun String Combiner",
+    "VideoFileUploader": "StepFun Video File Uploader",
     
 }
