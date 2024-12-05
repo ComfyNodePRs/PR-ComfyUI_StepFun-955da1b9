@@ -390,12 +390,16 @@ class CombineStrings:
         return (all_strings, combined_string)
 
 class VideoFileUploader:
+    # 用于存储上传记录的缓存文件路径
+    CACHE_FILE = os.path.join(os.path.dirname(__file__), "video_upload_cache.json")
+    
     @classmethod
     def INPUT_TYPES(s):
         return {
             "required": {
                 "client": ("STEPFUN_CLIENT",),
                 "file_path": ("STRING", {"default": ""}),
+                "force_reupload": ("BOOLEAN", {"default": False}),
             },
             "hidden": {
                 "unique_id": "UNIQUE_ID"
@@ -407,9 +411,51 @@ class VideoFileUploader:
     FUNCTION = "upload_video_file"
     CATEGORY = "StepFun"
 
-    def upload_video_file(self, client, file_path, unique_id):
+    def _load_cache(self):
+        """加载缓存数据"""
+        if os.path.exists(self.CACHE_FILE):
+            try:
+                with open(self.CACHE_FILE, 'r') as f:
+                    return json.load(f)
+            except:
+                return {}
+        return {}
+
+    def _save_cache(self, cache_data):
+        """保存缓存数据"""
+        os.makedirs(os.path.dirname(self.CACHE_FILE), exist_ok=True)
+        with open(self.CACHE_FILE, 'w') as f:
+            json.dump(cache_data, f)
+
+    def _get_file_hash(self, file_path):
+        """计算文件的MD5哈希值"""
+        hash_md5 = hashlib.md5()
+        with open(file_path, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash_md5.update(chunk)
+        return hash_md5.hexdigest()
+
+    def upload_video_file(self, client, file_path, force_reupload, unique_id):
         if not os.path.exists(file_path):
             raise ValueError(f"文件不存在: {file_path}")
+        
+        # 加载缓存
+        cache = self._load_cache()
+        file_hash = self._get_file_hash(file_path)
+        
+        # 检查缓存中是否存在且不强制重新上传
+        if not force_reupload and file_hash in cache:
+            PromptServer.instance.send_sync("stepfun.file.upload", {
+                "node": unique_id,
+                "message": f"使用缓存的上传记录: {os.path.basename(file_path)}",
+                "type": "success"
+            })
+            return {
+                "ui": {
+                    "file_link": cache[file_hash]
+                },
+                "result": (cache[file_hash],)
+            }
         
         PromptServer.instance.send_sync("stepfun.file.upload", {
             "node": unique_id,
@@ -423,6 +469,10 @@ class VideoFileUploader:
             )
             
             file_link = f"stepfile://{response.id}"
+            
+            # 更新缓存
+            cache[file_hash] = file_link
+            self._save_cache(cache)
             
             PromptServer.instance.send_sync("stepfun.file.upload", {
                 "node": unique_id,
